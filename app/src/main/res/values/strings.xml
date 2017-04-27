@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">OCR</string>
+    <string name="title_activity_file">FIleActivity</string>
+    <string name="button_text">OCR!</string>
+    <string name="button2_text">Gallery</string>
+    <string name="text_hint">OCRed Text will appear here</string>
+
+</resources>

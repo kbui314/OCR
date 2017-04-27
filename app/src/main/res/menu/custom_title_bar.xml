@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:title="Camera"
+        android:id="@+id/action_camera"
+        android:orderInCategory="100"
+        app:showAsAction="ifRoom"
+        />
+    <item
+        android:title="Open Gallery Image"
+        android:id="@+id/action_open"
+        app:showAsAction="never"
+        />
+
+</menu>
