@@ -1,30 +1,17 @@
 package com.example.kennybui.ocr;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.os.Build;
-import android.os.ParcelFileDescriptor;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.jar.Manifest;
-import java.util.zip.GZIPInputStream;
-
-import android.app.Activity;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -32,15 +19,18 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 
 import com.googlecode.tesseract.android.TessBaseAPI;
 
@@ -60,19 +50,24 @@ public class MainActivity1 extends AppCompatActivity {
 
     private static final String TAG = "MainActivity1.java";
     private static int RESULT_LOAD_IMAGE = 1;
-
     protected Button _button, importBtn;
-    // protected ImageView _image;
     protected EditText _field;
     protected String _path;
     protected boolean _taken;
+    public String img_path;
 
     protected static final String PHOTO_TAKEN = "photo_taken";
     Uri uri;
+    private String fname;
+    public String inputData;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main1);
+        Bundle bundle = getIntent().getExtras();
+        fname = bundle.getString("filename");
+
         DATA_PATH = new File(this.getFilesDir(), "tessdata");
         DATA_PATH.mkdirs();
 
@@ -100,15 +95,13 @@ public class MainActivity1 extends AppCompatActivity {
 
 
 
-        // _image = (ImageView) findViewById(R.id.image);
         _field = (EditText) findViewById(R.id.field);
         _button = (Button) findViewById(R.id.button);
         importBtn = (Button) findViewById(R.id.importBtn);
         _button.setOnClickListener(new ButtonClickHandler());
         importBtn.setOnClickListener(new GalleryClickHandler());
 
-        // _path = DATA_PATH + "/ocr.jpg";
-        //Toast.makeText(MainActivity.this, _path, Toast.LENGTH_LONG).show();
+
     }
 
     public class ButtonClickHandler implements View.OnClickListener {
@@ -129,7 +122,7 @@ public class MainActivity1 extends AppCompatActivity {
     protected void startCameraActivity() {
         _path = null;
         File imgPath = new File(getFilesDir(), "Images");
-        //String imgPath = "user/0/csc3380.project.ocr_app/files/";
+
         File file = new File(imgPath + File.separator + "ocr.jpg");
         file.getParentFile().mkdirs();
         if (!file.exists())
@@ -149,14 +142,13 @@ public class MainActivity1 extends AppCompatActivity {
         startActivityForResult(intent, 2);
     }
     protected void startGalleryActivity() {
-
-        Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-
+		Intent i = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(i, RESULT_LOAD_IMAGE);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
 
         Log.i(TAG, "resultCode: " + resultCode);
 
@@ -165,6 +157,7 @@ public class MainActivity1 extends AppCompatActivity {
             onPhotoTaken();
         }
         else if (requestCode == RESULT_LOAD_IMAGE) {
+            ImageView imgView = (ImageView) findViewById(R.id.imageView);
             Uri selectedImage = data.getData();
             String[] filePathColumn = { MediaStore.Images.Media.DATA };
 
@@ -174,44 +167,17 @@ public class MainActivity1 extends AppCompatActivity {
             int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
             String picturePath = cursor.getString(columnIndex);
             cursor.close();
-            //String pPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath()+ "/Camera/20170426_124033.jpg";
-            //Toast.makeText(this,"here:" + pPath,Toast.LENGTH_LONG).show();
-            Bitmap b_map = BitmapFactory.decodeFile(picturePath);
-            ImageView imgView = (ImageView) findViewById(R.id.imageView);
-            imgView.setImageBitmap(b_map);
+            
+			imgView.setImageBitmap(BitmapFactory.decodeFile(picturePath));
             imgView.setVisibility(View.VISIBLE);
             _path = null;
-            _path = pPath;
-            //File imgPath = new File(getFilesDir(), "Images");
-            //String imgPath = "user/0/csc3380.project.ocr_app/files/";
-            //File file = new File(imgPath + File.separator + "ocr.jpg");
-          // bmap = null;
-           // try{
-           //     bmap = BitmapFactory.decde
-           // }catch (IOException e) {
-           //     e.printStackTrace();
-           // }
-/*            File gallery_pic = new File(_path);
-            ArrayList<Byte> bytes = new ArrayList<Byte>();
-            int b = 0;
-            try {
-                fis = new FileInputStream(gallery_pic);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            try {
-                while ((b = fis.read())!=  -1) {
-                    bytes.add((byte)b);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            byte[] info = new byte[bytes.size()];
-            for (int i = 0; i <bytes.size();i++){
-                info[i] = bytes.get(i);
-            }
+            _path = picturePath;
+            File imgPath = new File(getFilesDir(), "Images");
 
-*/
+            File file = new File(imgPath + File.separator + "ocr.jpg");
+
+
+
             onPhotoTaken();
 
         }
@@ -309,7 +275,7 @@ public class MainActivity1 extends AppCompatActivity {
             Log.e(TAG, "Couldn't correct orientation: " + e.toString());
         }
 
-        // _image.setImageBitmap( bitmap );
+
 
         Log.v(TAG, "Before baseApi");
         //cropImage(bitmap);
@@ -333,6 +299,7 @@ public class MainActivity1 extends AppCompatActivity {
         }
 
         recognizedText = recognizedText.trim();
+        inputData = recognizedText;
 
         if (recognizedText.length() != 0) {
             _field.setText(_field.getText().toString().length() == 0 ? recognizedText : _field.getText() + " " + recognizedText);
@@ -346,8 +313,7 @@ public class MainActivity1 extends AppCompatActivity {
         File assetPath = new File(getFilesDir(), "tessdata");
         assetPath.getParentFile().mkdirs();
         File myAss = new File(assetPath + File.separator + "eng.traineddata");
-        //Toast.makeText(this, "You made it here", Toast.LENGTH_LONG).show();
-        //Toast.makeText(this, myAss.toString(), Toast.LENGTH_LONG).show();
+
 
 
         myAss.getParentFile().mkdirs();
@@ -359,11 +325,10 @@ public class MainActivity1 extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
-        //if (!myAss.exists()) {
-            try {
-                //Toast.makeText(this, "Checkpoint reached", Toast.LENGTH_LONG).show();
 
-                //AssetManager assetManager = getAssets();
+            try {
+
+
                 AssetManager assetManager = this.getAssets();
 
 
@@ -373,19 +338,19 @@ public class MainActivity1 extends AppCompatActivity {
                 // Transfer bytes from in to out
                 byte[] buf = new byte[1024];
                 int len;
-                //while ((lenf = gin.read(buff)) > 0) {
+
                 while ((len = in.read(buf)) > 0) {
                     out.write(buf, 0, len);
                 }
                 in.close();
-                //gin.close();
+
                 out.close();
 
                 Log.v(TAG, "Copied " + lang + " traineddata");
             } catch (IOException e) {
                 Log.e(TAG, "Was unable to copy " + lang + " traineddata " + e.toString());
             }
-       // }
+
 
     }
     public boolean isExternalStorageWritable() {
@@ -397,14 +362,57 @@ public class MainActivity1 extends AppCompatActivity {
     }
 
 
-    private Bitmap getBitmapFromUri(Uri uri) throws IOException {
-        ParcelFileDescriptor parcelFileDescriptor =
-                getContentResolver().openFileDescriptor(uri, "r");
-        FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
-        Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
-        parcelFileDescriptor.close();
-        return image;
+
+
+    public Bitmap decodeFile(String path) {
+        try {
+            // Decode image size
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, o);
+            // The new size we want to scale to
+            final int REQUIRED_SIZE = 70;
+
+            // Find the correct scale value. It should be the power of 2.
+            int scale = 1;
+            while (o.outWidth / scale / 2 >= REQUIRED_SIZE && o.outHeight / scale / 2 >= REQUIRED_SIZE)
+                scale *= 2;
+
+            // Decode with inSampleSize
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            return BitmapFactory.decodeFile(path, o2);
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return null;
+
+    }
+    public boolean onCreateOptionsMenu(Menu menu){
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.save,menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+        if(id == R.id.save){
+            toSave();
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void toSave(){
+
+        try {
+            File file = new File(fname+".txt");
+            FileWriter fileWriter = new FileWriter(file);
+            fileWriter.write(inputData);
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
 }
